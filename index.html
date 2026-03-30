@@ -60,6 +60,177 @@
             z-index: -1;
         }
 
+        /* Water Effect Canvas */
+        #waterCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+            opacity: 0.6;
+        }
+
+        .particle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(200, 16, 46, 0.3) 0%, transparent 70%);
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+            animation-duration: 25s;
+        }
+
+        .particle:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0, 20, 137, 0.3) 0%, transparent 70%);
+            top: 60%;
+            right: 10%;
+            animation-delay: -5s;
+            animation-duration: 30s;
+        }
+
+        .particle:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(200, 16, 46, 0.2) 0%, transparent 70%);
+            bottom: 20%;
+            left: 30%;
+            animation-delay: -10s;
+            animation-duration: 22s;
+        }
+
+        .particle:nth-child(4) {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(0, 20, 137, 0.25) 0%, transparent 70%);
+            top: 30%;
+            right: 25%;
+            animation-delay: -15s;
+            animation-duration: 28s;
+        }
+
+        .particle:nth-child(5) {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(200, 16, 46, 0.4) 0%, transparent 70%);
+            top: 70%;
+            left: 60%;
+            animation-delay: -8s;
+            animation-duration: 18s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translate(50px, -30px) rotate(90deg) scale(1.1);
+            }
+            50% {
+                transform: translate(-30px, 50px) rotate(180deg) scale(0.95);
+            }
+            75% {
+                transform: translate(-50px, -20px) rotate(270deg) scale(1.05);
+            }
+        }
+
+        /* Glow Effects */
+        .glow-red {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(200, 16, 46, 0.15) 0%, transparent 60%);
+            animation: pulse-glow 8s infinite ease-in-out;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .glow-blue {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0, 20, 137, 0.15) 0%, transparent 60%);
+            animation: pulse-glow 8s infinite ease-in-out reverse;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Animated gradient border */
+        .animated-border {
+            position: relative;
+        }
+
+        .animated-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, var(--primary-red), var(--primary-blue), var(--primary-red));
+            background-size: 400% 400%;
+            border-radius: inherit;
+            animation: gradient-rotate 3s linear infinite;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .animated-border:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes gradient-rotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Hover lift effect */
+        .hover-lift {
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(200, 16, 46, 0.2), 0 20px 60px rgba(0, 20, 137, 0.2);
+        }
+
+        /* Stagger animations */
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .stagger-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         .glass {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -991,6 +1162,18 @@
     </style>
 </head>
 <body>
+    <!-- Water Effect Canvas -->
+    <canvas id="waterCanvas"></canvas>
+    
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    
     <!-- Navigation -->
     <nav id="navbar">
         <div class="nav-container">
@@ -1484,6 +1667,131 @@
                     });
                 }
             });
+        });
+
+        // Water Ripple Effect
+        const canvas = document.getElementById('waterCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let ripples = [];
+        
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        class Ripple {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 0;
+                this.maxRadius = Math.max(width, height) * 0.4;
+                this.speed = 2;
+                this.opacity = 0.6;
+                this.color = Math.random() > 0.5 ? '200, 16, 46' : '0, 20, 137';
+            }
+            
+            update() {
+                this.radius += this.speed;
+                this.opacity = 0.6 * (1 - this.radius / this.maxRadius);
+                
+                if (this.radius > this.maxRadius) {
+                    return false;
+                }
+                return true;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(${this.color}, ${this.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Inner glow
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.7, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(${this.color}, ${this.opacity * 0.3})`;
+                ctx.lineWidth = 8;
+                ctx.stroke();
+            }
+        }
+        
+        function createRipple(x, y) {
+            ripples.push(new Ripple(x, y));
+        }
+        
+        function animateRipples() {
+            ctx.clearRect(0, 0, width, height);
+            
+            ripples = ripples.filter(ripple => ripple.update());
+            ripples.forEach(ripple => ripple.draw());
+            
+            requestAnimationFrame(animateRipples);
+        }
+        
+        // Create ripples periodically
+        setInterval(() => {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            createRipple(x, y);
+        }, 2000);
+        
+        // Create ripple on mouse move (throttled)
+        let mouseThrottle = false;
+        document.addEventListener('mousemove', (e) => {
+            if (mouseThrottle) return;
+            mouseThrottle = true;
+            setTimeout(() => {
+                createRipple(e.clientX, e.clientY);
+                mouseThrottle = false;
+            }, 100);
+        });
+        
+        animateRipples();
+
+        // Intersection Observer for stagger animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Add stagger class to service cards and observe them
+        document.querySelectorAll('.service-card').forEach((card, index) => {
+            card.classList.add('stagger-item');
+            card.style.transitionDelay = `${index * 0.1}s`;
+            observer.observe(card);
+        });
+
+        // Parallax effect on scroll
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const scrolled = window.pageYOffset;
+                    const particles = document.querySelectorAll('.particle');
+                    
+                    particles.forEach((particle, index) => {
+                        const speed = (index + 1) * 0.05;
+                        particle.style.transform = `translateY(${scrolled * speed}px)`;
+                    });
+                    
+                    ticking = false;
+                });
+                ticking = true;
+            }
         });
     </script>
 </body>
